@@ -9,8 +9,8 @@
  * - inquirer: For interactive prompts
  * - fs: For file system operations
  * Author: Mohamed Bakr
- * Date: June 2024
- * Version: 1.0.0
+ * Date: Jan 2026
+ * Version: 1.0.0 -> 1.0.2
  */
 
 // for using commands in terminal
