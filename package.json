@@ -1,0 +1,23 @@
+{
+  "name": "taskninja",
+  "version": "1.0.2",
+  "description": "a simple CLI application with JS as a (To-Do Application)",
+  "main": "app.js",
+  "type" : "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "bin" : {
+    "dotask": "./app.js",
+    "taskninja": "./app.js",
+    "tn": "./app.js"
+  },
+  "author": "Moahmed Bakr",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.2",
+    "inquirer": "^13.2.1"
+  }
+}
