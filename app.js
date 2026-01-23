@@ -9,8 +9,8 @@
  * - inquirer: For interactive prompts
  * - fs: For file system operations
  * Author: Mohamed Bakr
- * Date: June 2024
- * Version: 1.0.0
+ * Date: Jan 2026
+ * Version: 1.0.0 -> 1.0.2
  */
 
 // for using commands in terminal
@@ -161,117 +161,12 @@ program
             console.error('Task not found!');
             return;
         }
+        task.status = status;
 
-        const answers = await inquirer.prompt([
-      // for title
-        {
-            type: 'confirm',
-            name: 'changeTitle',
-            message: 'Do you want to change the title?',
-            default: false
-        },
-        {
-            type: 'input',
-            name: 'title',
-            message: 'Enter the new title:',
-            when: answers => answers.changeTitle,
-            validate: input => input ? true : 'Title cannot be empty!'
-        },
+        await saveTasks(tasks);
+        console.log('Task updated successfully!');
 
-      // for status
-        {
-            type: 'confirm',
-            name: 'changeStatus',
-            message: 'Do you want to change the status?',
-            default: false
-        },
-        {
-            type: 'rawlist',
-            name: 'status',
-            message: 'Select the new status:',
-            choices: ALLOWED_STATUSES,
-            when: answers => answers.changeStatus
-        },
-
-      // for priority
-        {
-            type: 'confirm',
-            name: 'changePriority',
-            message: 'Do you want to change the priority?',
-            default: false
-        },
-        {
-            type: 'rawlist',
-            name: 'priority',
-            message: 'Select the new priority:',
-            choices: ALLOWED_PRIORITIES,
-            when: answers => answers.changePriority
-        },
-
-      // for due date
-        {
-            type: 'confirm',
-            name: 'changeDueDate',
-            message: 'Do you want to change the due date?',
-            default: false
-        },
-        {
-            type: 'input',
-            name: 'dueDate',
-            message: 'Enter the new due date (YYYY-MM-DD):',
-            when: answers => answers.changeDueDate,
-            validate: input => {
-                try {
-                    validateDueDate(input);
-                    return true;
-                } catch (error) {
-                    return error.message;
-                }
-            }
-        },
-
-      // for description
-        {
-            type: 'confirm',
-            name: 'changeDescription',
-            message: 'Do you want to change the description?',
-            default: false
-        },
-        {
-            type: "rawlist",
-            name: 'description',
-            message: 'Enter the new description:',
-            when: answers => answers.changeDescription
-        }
-    ]);
-
-    // apply updates only if user chose to change them
-    if (answers.changeTitle) task.title = answers.title;
-    if (answers.changeStatus) task.status = answers.status;
-    if (answers.changePriority) task.priority = answers.priority;
-    if (answers.changeDueDate) task.dueDate = answers.dueDate;
-    if (answers.changeDescription)
-        task.description = answers.description || '';
-
-    // is there any change?
-    const hasChanges = [
-            answers.changeTitle,
-            answers.changeStatus,
-            answers.changePriority,
-            answers.changeDueDate,
-            answers.changeDescription
-        ].some(Boolean);
-
-        if (!hasChanges) {
-            console.log('No changes were made.');
-        }else {
-            // save updated tasks to file
-            await saveTasks(tasks);
-            console.log('Task updated successfully!');
-        }
-    
-        const tableData = tasks.map((task, index) => ({
-            '#': index + 1,
+        console.table([{
             ID: task.id,
             Title: task.title,
             Status: task.status,
@@ -323,8 +218,7 @@ program
         await saveTasks(newTasks);
         console.log('Task deleted successfully!');
 
-        const tableData = newTasks.map((task, index) => ({
-            '#': index + 1,
+        console.table([{
             ID: task.id,
             Title: task.title,
             Status: task.status,
