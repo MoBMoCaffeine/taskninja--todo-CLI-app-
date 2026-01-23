@@ -17,70 +17,28 @@
 import { Command } from "commander";
 // for interactive command line prompts
 import inquirer from "inquirer";
-// for file system operations
-import fs from "fs/promises";
 
 // assigning Commander to a variable
 const program = new Command();
 
-// file to store tasks
-const TASKS_FILE = "./todos.json";
-// allowed task statuses
-const ALLOWED_STATUSES = ["todo", "in-progress", "done"];
-// allowed task priorities
-const ALLOWED_PRIORITIES = ["low", "medium", "high"];
-
-
-// function to load tasks from file
-const loadTasks = async () => {
-    try{
-        const data = await fs.readFile(TASKS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        if (error.code === 'ENOENT') return [];
-        throw error;
-    }
-};
-// function to save tasks to file
-const saveTasks = async (tasks) => {
-    await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
-};
-// get next task ID
-const getNextId = (tasks) => {
-    return tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
-};
-// validate task status
-const validateStatus = (status) => {
-    if (!ALLOWED_STATUSES.includes(status)) {
-        throw new Error(`Invalid status. Allowed statuses are: ${ALLOWED_STATUSES.join(", ")}`);
-    }
-};
-// validate task priority
-const validatePriority = (priority) => {
-    if (!ALLOWED_PRIORITIES.includes(priority)) {
-        throw new Error(`Invalid priority. Allowed priorities are: ${ALLOWED_PRIORITIES.join(", ")}`);
-    }  
-};
-// verify due date format
-const validateDueDate = (dueDate) => {
-    if (isNaN(Date.parse(dueDate))) {
-        throw new Error("Invalid due date. Please use a valid date format (YYYY-MM-DD).");
-    }
-};
+// importing validators and allowed values
+import { validateDueDate, ALLOWED_PRIORITIES, ALLOWED_STATUSES } from "./validators.js";
+// importing task service functions
+import { loadTasks, saveTasks, getNextId } from "./taskService.js";
 
 
 // setting up
 program
     .name("todo-cli")
     .description("A simple CLI application to manage your tasks")
-    .version("1.0.0");
+    .version("1.0.4");
 
 // use command 'add' with title + status + priority + dueDate + description and action
 program
     .command('add')
     .alias('a')
     .description('Add a new task')
-    .action(async (title, status, priority, dueDate, description = "") => {
+    .action(async () => {
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -89,14 +47,14 @@ program
                 validate : input => input ? true : 'Title cannot be empty!'
             },
             {
-                type: 'list',
+                type: 'rawlist',
                 name: 'status',
                 message : 'Task Status:',
                 choices : ALLOWED_STATUSES,
                 default : 'todo'
             },
             {
-                type: 'list',
+                type: 'rawlist',
                 name: 'priority',
                 message : 'Task Priority:',
                 choices : ALLOWED_PRIORITIES,
@@ -146,7 +104,7 @@ program
     .command('list')
     .alias('ls')
     .description('List all tasks')
-    .option('-s, --status <status>', 'Filter tasks by status')
+    .option('-s, --status <status>', 'Filter tasks by status (todo, in-progress, done)')
     .action(async (options) => {
         let tasks = await loadTasks();
 
@@ -162,7 +120,8 @@ program
             return;
         }
        // map all tasks to displayable objects
-        const tableData = tasks.map(task => ({
+        const tableData = tasks.map((task, index) => ({
+            '#': index + 1,
             ID: task.id,
             Title: task.title,
             Status: task.status,
@@ -179,7 +138,7 @@ program
 program 
     .command('update')
     .alias('up')
-    .description('Update a task by ID')
+    .description('Update a task by ==> ID <==')
     .action(async () =>{
         const tasks = await loadTasks();
         if (tasks.length === 0) {
@@ -189,46 +148,148 @@ program
 
         const { id } = await inquirer.prompt([
             {
-                type: 'list',
+                type: 'rawlist',
                 name: 'id',
-                message: 'Select the task to update:',
+                message: 'Select the task to update (By ID):',
                 choices: tasks.map(task => ({ name: `${task.id}: ${task.title}`, value: task.id }))
             }
         ]);
-        const { status } = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'status',
-                message: 'Select the new status:',
-                choices: ALLOWED_STATUSES
-            }
-        ]);
 
+        // find the task to update
         const task = tasks.find(t => t.id === Number(id));
         if (!task) {
             console.error('Task not found!');
             return;
         }
-        task.status = status;
 
-        await saveTasks(tasks);
-        console.log('Task updated successfully!');
+        const answers = await inquirer.prompt([
+      // for title
+        {
+            type: 'confirm',
+            name: 'changeTitle',
+            message: 'Do you want to change the title?',
+            default: false
+        },
+        {
+            type: 'input',
+            name: 'title',
+            message: 'Enter the new title:',
+            when: answers => answers.changeTitle,
+            validate: input => input ? true : 'Title cannot be empty!'
+        },
 
-        console.table([{
+      // for status
+        {
+            type: 'confirm',
+            name: 'changeStatus',
+            message: 'Do you want to change the status?',
+            default: false
+        },
+        {
+            type: 'rawlist',
+            name: 'status',
+            message: 'Select the new status:',
+            choices: ALLOWED_STATUSES,
+            when: answers => answers.changeStatus
+        },
+
+      // for priority
+        {
+            type: 'confirm',
+            name: 'changePriority',
+            message: 'Do you want to change the priority?',
+            default: false
+        },
+        {
+            type: 'rawlist',
+            name: 'priority',
+            message: 'Select the new priority:',
+            choices: ALLOWED_PRIORITIES,
+            when: answers => answers.changePriority
+        },
+
+      // for due date
+        {
+            type: 'confirm',
+            name: 'changeDueDate',
+            message: 'Do you want to change the due date?',
+            default: false
+        },
+        {
+            type: 'input',
+            name: 'dueDate',
+            message: 'Enter the new due date (YYYY-MM-DD):',
+            when: answers => answers.changeDueDate,
+            validate: input => {
+                try {
+                    validateDueDate(input);
+                    return true;
+                } catch (error) {
+                    return error.message;
+                }
+            }
+        },
+
+      // for description
+        {
+            type: 'confirm',
+            name: 'changeDescription',
+            message: 'Do you want to change the description?',
+            default: false
+        },
+        {
+            type: "rawlist",
+            name: 'description',
+            message: 'Enter the new description:',
+            when: answers => answers.changeDescription
+        }
+    ]);
+
+    // apply updates only if user chose to change them
+    if (answers.changeTitle) task.title = answers.title;
+    if (answers.changeStatus) task.status = answers.status;
+    if (answers.changePriority) task.priority = answers.priority;
+    if (answers.changeDueDate) task.dueDate = answers.dueDate;
+    if (answers.changeDescription)
+        task.description = answers.description || '';
+
+    // is there any change?
+    const hasChanges = [
+            answers.changeTitle,
+            answers.changeStatus,
+            answers.changePriority,
+            answers.changeDueDate,
+            answers.changeDescription
+        ].some(Boolean);
+
+        if (!hasChanges) {
+            console.log('No changes were made.');
+        }else {
+            // save updated tasks to file
+            await saveTasks(tasks);
+            console.log('Task updated successfully!');
+        }
+    
+        const tableData = tasks.map((task, index) => ({
+            '#': index + 1,
             ID: task.id,
             Title: task.title,
             Status: task.status,
             Priority: task.priority,
             DueDate: task.dueDate,
             Description: task.description || ''
-        }]);
+        }));
+
+        // display all tasks in table format
+        console.table(tableData);
     });
+
 
 // use command 'delete' with task ID and action
 program
     .command('delete')
     .alias('del')
-    .description('delete a task by ID')
+    .description('delete a task by ==> ID <==')
     .action(async () => {
         const tasks = await loadTasks();
         if (tasks.length === 0) {
@@ -238,7 +299,7 @@ program
 
         const { id } = await inquirer.prompt([
             {
-                type: 'list',
+                type: 'rawlist',
                 name: 'id',
                 message: 'Select the task to delete:',
                 choices: tasks.map(task => ({ name: `${task.id}: ${task.title}`, value: task.id }))
@@ -258,18 +319,22 @@ program
             return;
         }
 
-        const newTasks = tasks.filter(t => t.id !== id);
+        const newTasks = tasks.filter(t => t.id !== Number(id));
         await saveTasks(newTasks);
         console.log('Task deleted successfully!');
 
-        console.table([{
+        const tableData = newTasks.map((task, index) => ({
+            '#': index + 1,
             ID: task.id,
             Title: task.title,
             Status: task.status,
             Priority: task.priority,
             DueDate: task.dueDate,
             Description: task.description || ''
-        }]);
+        }));
+
+        // display all tasks in table format
+        console.table(tableData);
     });
 
 // parse command line arguments

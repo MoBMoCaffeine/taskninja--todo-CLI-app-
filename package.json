@@ -1,6 +1,6 @@
 {
   "name": "taskninja",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "a simple CLI application with JS as a (To-Do Application)",
   "main": "app.js",
   "type" : "module",
