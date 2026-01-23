@@ -214,14 +214,18 @@ program
         await saveTasks(tasks);
         console.log('Task updated successfully!');
 
-        console.table([{
+       // map all tasks to displayable objects
+        const tableData = tasks.map(task => ({
             ID: task.id,
             Title: task.title,
             Status: task.status,
             Priority: task.priority,
             DueDate: task.dueDate,
             Description: task.description || ''
-        }]);
+        }));
+
+        // display all tasks in table format
+        console.table(tableData);
     });
 
 // use command 'delete' with task ID and action
@@ -262,14 +266,18 @@ program
         await saveTasks(newTasks);
         console.log('Task deleted successfully!');
 
-        console.table([{
+        // map all tasks to displayable objects
+        const tableData = tasks.map(task => ({
             ID: task.id,
             Title: task.title,
             Status: task.status,
             Priority: task.priority,
             DueDate: task.dueDate,
             Description: task.description || ''
-        }]);
+        }));
+
+        // display all tasks in table format
+        console.table(tableData);
     });
 
 // parse command line arguments
