@@ -10,7 +10,7 @@
  * - fs: For file system operations
  * Author: Mohamed Bakr
  * Date: January 2024
- * Version: 1.1.0
+ * Version: 1.1.1
  */
 
 // for using commands in terminal
