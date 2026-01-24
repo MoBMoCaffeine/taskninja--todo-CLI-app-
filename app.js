@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 /**
+ * TASKNINJA -
  * Task Manager CLI Application
  * This application allows users to manage their tasks via command line interface.
  * It supports adding, listing, and removing tasks.
@@ -8,29 +9,71 @@
  * - inquirer: For interactive prompts
  * - fs: For file system operations
  * Author: Mohamed Bakr
- * Date: June 2024
- * Version: 1.0.0
+ * Date: January 2024
+ * Version: 1.1.0
  */
 
 // for using commands in terminal
 import { Command } from "commander";
 // for interactive command line prompts
 import inquirer from "inquirer";
+// supporting colors in table forms
+import Table from 'cli-table3';
+// for colored text 
+import chalk from 'chalk';
 
 // assigning Commander to a variable
 const program = new Command();
 
 // importing validators and allowed values
-import { validateDueDate, ALLOWED_PRIORITIES, ALLOWED_STATUSES } from "./validators.js";
+import { validateDueDate, ALLOWED_PRIORITIES, ALLOWED_STATUSES } from "./utils/validators.js";
 // importing task service functions
-import { loadTasks, saveTasks, getNextId } from "./taskService.js";
+import { loadTasks, saveTasks, getNextId, saveDeletedTask, loadDeletedTask, clearDeletedTask  } from "./utils/taskService.js";
 
 
+// helper function to display tasks in colored table
+const displayTasks = (tasks) => {
+    if (!tasks.length) {
+        console.log(chalk.yellow("No tasks to display."));
+        return;
+    }
+
+    const table = new Table({
+        head:  [
+        chalk.cyanBright('#'),
+        chalk.cyanBright('ID'),
+        chalk.cyanBright('Title'),
+        chalk.cyanBright('Status'),
+        chalk.cyanBright('Priority'),
+        chalk.cyanBright('DueDate'),
+        chalk.cyanBright('Description')
+    ],
+        colWidths: [4, 4, 15, 15, 10, 12, 40]
+    });
+
+    tasks.forEach((task, index) => {
+        table.push([
+            index + 1,
+            task.id,
+            task.title,
+            task.status === "done" ? chalk.green(task.status)
+            : task.status === "in-progress" ? chalk.yellow(task.status)
+            : chalk.blue(task.status),
+            task.priority === "high" ? chalk.red(task.priority)
+            : task.priority === "medium" ? chalk.yellow(task.priority)
+            : chalk.green(task.priority),
+            task.dueDate,
+            task.description || ''
+        ]);
+    });
+
+    console.log(table.toString());
+};
 // setting up
 program
-    .name("todo-cli")
+    .name("taskninja")
     .description("A simple CLI application to manage your tasks")
-    .version("1.0.4");
+    .version("1.1.0");
 
 // use command 'add' with title + status + priority + dueDate + description and action
 program
@@ -76,7 +119,7 @@ program
                 type: 'input',
                 name: 'description',
                 message : 'Task Description (optional):'    
-            }
+            },
         ]);
     // load existing tasks
     const tasks = await loadTasks();
@@ -94,7 +137,7 @@ program
     tasks.push(newTask);
     // save updated tasks to file
     await saveTasks(tasks);
-    console.log("Task added successfully!");
+    console.log(chalk.green('Task added successfully!'));
 });
 
 
@@ -109,29 +152,97 @@ program
 
         if (options.status) {
             if (!ALLOWED_STATUSES.includes(options.status)){
-                console.error(`Invalid status filter. Allowed statuses are: ${ALLOWED_STATUSES.join(", ")}`);
-                process.exit(1);
+                console.log(chalk.red(`Invalid status filter. Allowed statuses are: ${ALLOWED_STATUSES.join(", ")}`));
+                return;
             }
             tasks = tasks.filter(task => task.status === options.status);
         }
-        if (tasks.length === 0) {
-            console.log('No tasks found.');
+        // display all tasks in table format
+        displayTasks(tasks);
+    });
+
+
+
+// use caommand 'search' to find tasks by keyword in title or description
+program
+    .command('search <keyword>')
+    .alias('sr')
+    .description('Search tasks by keyword in title or description')
+    .action( async (keyword) => {
+        if (!keyword) {
+            console.log(chalk.yellow('Please provide a keyword to search using --search option.'));
+            console.log(chalk.cyan('Example: tn search meeting'));
             return;
         }
-       // map all tasks to displayable objects
-        const tableData = tasks.map((task, index) => ({
-            '#': index + 1,
-            ID: task.id,
-            Title: task.title,
-            Status: task.status,
-            Priority: task.priority,
-            DueDate: task.dueDate,
-            Description: task.description || ''
-        }));
 
-        // display all tasks in table format
-        console.table(tableData);
+        const tasks = await loadTasks();
+
+        const founded = tasks.filter(task => {
+            task.title.toLowerCase().includes(keyword.toLowerCase()) || task.description.toLowerCase().includes(keyword.toLowerCase())
+        });
+
+        if (!founded.length) {
+            console.log(chalk.red('No task matched your search!'));
+            return;
+        } 
+
+        displayTasks(founded);
     });
+
+
+
+
+// use command 'sort' to sort tasks by due date, priority, or status
+program
+    .command('sort')
+    .alias('so')
+    .option('--by <criteria>', 'Sort tasks by criteria (dueDate, priority, status)')
+    .description('Sort tasks by due date, priority, or status')
+    .action( async (options) => {
+
+        const tasks = await loadTasks();
+        let criteria = options.by;
+
+        if (!criteria) {
+            const answer = await inquirer.prompt([
+                {
+                    type: 'rawlist',
+                    name: 'criteria',
+                    message: 'Sort tasks by:',
+                    choices: ['dueDate', 'priority', 'status']
+                }
+            ]);
+            criteria = answer.criteria;
+        }
+
+        
+        if (!['dueDate', 'priority', 'status'].includes(criteria)) {
+            console.log(chalk.red('Invalid sort criteria. Use --by with dueDate, priority, or status.'));
+            return;
+        }
+        // sorting logic
+        const sortedTasks = [...tasks];
+
+        switch (criteria) {
+            case 'dueDate' || 'duedate' || 'DueDate' || 'Duedate' || 'due date' || 'Due date' || 'due-date':
+                sortedTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+                break;
+            case 'priority' || 'Priority':
+                const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+                sortedTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+                break;
+            case 'status' || 'Status':
+                const statusOrder = { 'todo': 1, 'in-progress': 2, 'done': 3 };
+                sortedTasks.sort((a, b) => statusOrder[a.priority] - statusOrder[b.priority]);
+                break;
+            default:
+                console.log(chalk.red('Invalid sort criteria. Use dueDate, priority, or status.'));
+                return;
+        }
+
+        displayTasks(sortedTasks);
+    });
+
 
 // use command 'update' with task ID and action
 program 
@@ -141,7 +252,7 @@ program
     .action(async () =>{
         const tasks = await loadTasks();
         if (tasks.length === 0) {
-            console.log('No tasks found to update.');
+            console.log(chalk.red('No tasks found to update.'));
             return;
         }
 
@@ -157,7 +268,7 @@ program
         // find the task to update
         const task = tasks.find(t => t.id === Number(id));
         if (!task) {
-            console.error('Task not found!');
+            console.log(chalk.red('Task not found!'));
             return;
         }
 
@@ -262,26 +373,56 @@ program
         ].some(Boolean);
 
         if (!hasChanges) {
-            console.log('No changes were made.');
+            console.log(chalk.yellow('No changes were made.'));
         }else {
             // save updated tasks to file
             await saveTasks(tasks);
-            console.log('Task updated successfully!');
+            console.log(chalk.green('Task updated successfully!'));
         }
     
-        const tableData = tasks.map((task, index) => ({
-            '#': index + 1,
-            ID: task.id,
-            Title: task.title,
-            Status: task.status,
-            Priority: task.priority,
-            DueDate: task.dueDate,
-            Description: task.description || ''
-        }));
-
-        // display all tasks in table format
-        console.table(tableData);
+        displayTasks(tasks);
     });
+
+
+// use command 'done' with task ID instead of 'update' + confirm to mark task as done
+program
+    .command('done')
+    .description('Mark a task as done by ==> ID <==')
+    .action(async () => {
+        const tasks = await loadTasks();
+        if (tasks.length === 0) {
+            console.log(chalk.magenta('Congratulations! All tasks are already done.'));
+            return;
+        }
+
+        const activeTasks = tasks.filter(t => t.status !== 'done');
+        if (activeTasks.length === 0) {
+            console.log(chalk.magenta('Congratulations! All tasks are already done.'));
+            return;
+        }
+
+        const { id } = await inquirer.prompt([
+            {
+                type: 'rawlist',
+                name: 'id',
+                message: 'Select the task to mark as done:',
+                choices: activeTasks.map(t => (
+                    {
+                        name: `${t.id}: ${t.title}[Current Status: ${t.status}]`,
+                        value: t.id
+                    }
+                ))
+            }
+        ]);
+
+        const task = tasks.find(t => t.id === Number(id));
+        task.status = 'done';
+        await saveTasks(tasks);
+        console.log(chalk.green('Task marked as done successfully!'));
+
+        displayTasks(tasks);
+    });
+
 
 
 // use command 'delete' with task ID and action
@@ -292,7 +433,7 @@ program
     .action(async () => {
         const tasks = await loadTasks();
         if (tasks.length === 0) {
-            console.log('No tasks found to delete.');
+            console.log(chalk.yellow('No tasks found to delete.'));
             return;
         }
 
@@ -314,27 +455,44 @@ program
             }
         ]);
         if (!confirm) {
-            console.log('Task deletion cancelled.');
+            console.log(chalk.yellow('Task deletion cancelled.'));
             return;
         }
-
+        const taskToDelete = tasks.find(t => t.id === Number(id));
+        // save deleted task for undo functionality
+        await saveDeletedTask(taskToDelete);
+        // filter out the deleted task
         const newTasks = tasks.filter(t => t.id !== Number(id));
+
         await saveTasks(newTasks);
-        console.log('Task deleted successfully!');
+        console.log(chalk.green('Task deleted successfully!'));
+        console.log(chalk.cyan('You can undo this action by using the `undo` command.'));
 
-        const tableData = newTasks.map((task, index) => ({
-            '#': index + 1,
-            ID: task.id,
-            Title: task.title,
-            Status: task.status,
-            Priority: task.priority,
-            DueDate: task.dueDate,
-            Description: task.description || ''
-        }));
-
-        // display all tasks in table format
-        console.table(tableData);
+        displayTasks(newTasks);
     });
+
+// use command 'undo' to restore last deleted task
+program
+.command('undo')
+.alias('un')
+.description('Undo the last deleted task')
+.action( async () => {
+    const lastDeletedTask =  await loadDeletedTask();
+    if (!lastDeletedTask) {
+        console.log(chalk.yellow('No deleted task to restore.'));
+        return;
+    }
+
+    const tasks = await loadTasks();
+    tasks.push(lastDeletedTask);
+    tasks.sort((a, b) => a.id - b.id); // keep tasks sorted by ID
+    await saveTasks(tasks);
+    await clearDeletedTask();
+
+    console.log(chalk.green(`Last deleted task restored successfully!, (Task name: ${lastDeletedTask.title})`));
+});
+
+
 
 // parse command line arguments
 program.parse(process.argv);
