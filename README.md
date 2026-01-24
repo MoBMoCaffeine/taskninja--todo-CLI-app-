@@ -1,21 +1,25 @@
-
 # TaskNinja
 
-**Version:** 1.0.4  
-**Description:** A simple CLI To-Do Application to manage your tasks directly from the terminal.  
+**Version:** 1.1.0
+**Description:** A simple CLI To-Do Application to manage your tasks directly from the terminal. Includes colored tables, search, soft delete, undo, and interactive sort.
 
 ---
 
 ## Table of Contents
-- [Installation](#installation)
-- [Running the CLI](#running-the-cli)
-- [Commands](#commands)
-  - [Add Task](#add-task)
-  - [List Tasks](#list-tasks)
-  - [Update Task](#update-task)
-  - [Delete Task](#delete-task)
-- [Task Fields & Allowed Values](#task-fields--allowed-values)
-- [Examples](#examples)
+
+* [Installation](#installation)
+* [Running the CLI](#running-the-cli)
+* [Commands](#commands)
+
+  * [Add Task](#add-task)
+  * [List Tasks](#list-tasks)
+  * [Update Task](#update-task)
+  * [Delete Task](#delete-task)
+  * [Undo Delete Task](#undo-delete-task)
+  * [Search Tasks](#search-tasks)
+  * [Sort Tasks](#sort-tasks)
+* [Task Fields & Allowed Values](#task-fields--allowed-values)
+* [Examples](#examples)
 
 ---
 
@@ -30,16 +34,11 @@ npm install -g taskninja
 ```
 
 or use it instantly with:
+
 ```bash
 npx taskninja
-```
-
-and then use it:
-```bash
 npx taskninja <command>
 ```
-
-After installation, you can run the CLI using the `dotask` or `taskninja` or `tn` command (as defined in `package.json`).
 
 Clone the repository and install dependencies:
 
@@ -47,7 +46,7 @@ Clone the repository and install dependencies:
 git clone <your-repo-url>
 cd taskninja
 npm install
-````
+```
 
 ---
 
@@ -65,7 +64,7 @@ taskninja <command>
 tn <command>
 ```
 
-Replace `<command>` with any of the available commands: `add`, `list`, `update`, `delete`.
+Replace `<command>` with any of the available commands: `add`, `list`, `update`, `delete`, `undo`, `search`, `sort`.
 
 ---
 
@@ -77,28 +76,30 @@ Replace `<command>` with any of the available commands: `add`, `list`, `update`,
 **Description:** Add a new task interactively.
 
 ```bash
-node app.js add
-# or
 tn a
 ```
 
 **Prompts:**
 
 1. **Task Title:** Enter any text (cannot be empty).
+
 2. **Task Status:** Select from allowed values using arrows:
 
    * todo
    * in-progress
    * done
-3. **Task Priority:** Select from allowed values using arrows:
+
+3. **Task Priority:** Select from allowed values:
 
    * low
    * medium
    * high
+
 4. **Due Date:** Enter in `YYYY-MM-DD` format. Invalid dates will show a validation error.
+
 5. **Description:** Optional text.
 
-**Expected Behavior:**
+**Behavior:**
 
 * Task is saved in `todos.json`.
 * Confirmation message: `Task added successfully!`
@@ -111,25 +112,19 @@ tn a
 **Description:** List all tasks, optionally filtered by status.
 
 ```bash
-node app.js list
-# or
 tn ls
-```
-
-**Optional Status Filter:**
-
-```bash
-node app.js list --status todo
+tn ls --status todo
 ```
 
 **Behavior:**
 
-* Displays tasks in a table with columns:
+* Displays tasks in a **colored table** using chalk:
 
 | # | ID | Title | Status | Priority | DueDate | Description |
 | - | -- | ----- | ------ | -------- | ------- | ----------- |
 
-* Numbered index (`#`) starts from 1.
+* Status colors: `todo` → blue, `in-progress` → yellow, `done` → green
+* Priority colors: `low` → green, `medium` → yellow, `high` → red
 
 ---
 
@@ -139,46 +134,127 @@ node app.js list --status todo
 **Description:** Update an existing task by selecting its ID.
 
 ```bash
-node app.js update
-# or
 tn up
 ```
 
 **Steps:**
 
-1. Select task by ID from a list (use arrows).
+1. Select task by ID from a list.
 2. Confirm which fields to change (title, status, priority, due date, description).
-3. Enter new values where applicable (status/priority selections use arrows).
+3. Enter new values where applicable.
 
 **Behavior:**
 
 * Only fields selected for change are updated.
 * Confirmation message: `Task updated successfully!`
-* Shows updated task table.
+* Shows updated **colored task table**.
 
 ---
 
 ### 4. Delete Task
 
 **Alias:** `del`
-**Description:** Delete a task by selecting its ID.
+**Description:** Soft delete a task by selecting its ID.
 
 ```bash
-node app.js delete
-# or
 tn del
 ```
 
 **Steps:**
 
-1. Select task by ID from a list (use arrows).
+1. Select task by ID from a list.
 2. Confirm deletion.
 
 **Behavior:**
 
-* Task is removed from `todos.json`.
-* Confirmation message: `Task deleted successfully!`
-* Shows updated task table.
+* Task is removed from `todos.json` **but saved in `deleted-todos.json`**.
+* Confirmation: `Task deleted successfully!`
+* You can restore it using the `undo` command.
+
+---
+
+### 5. Undo Delete Task
+
+**Alias:** `un`
+**Description:** Restore the last deleted task.
+
+```bash
+tn un
+```
+
+**Behavior:**
+
+* Restores the last deleted task from `deleted-todos.json`.
+* Confirmation: `Last deleted task restored successfully!, (Task name: taskName)`
+
+---
+
+Here’s the **Search Tasks** section in the README updated in English after your CLI changes:
+
+---
+
+### 6. Search Tasks
+
+**Alias:** `sr`
+**Description:** Search tasks by keyword in title or description.
+
+```bash
+# Search interactively
+tn search
+
+# Or search directly using --find
+tn search --find "meeting"
+```
+
+**Behavior:**
+
+* If you run `tn search` without a keyword, the CLI will ask you:
+
+  1. Enter the keyword you want to search for.
+  2. Choose where to search: in the title, description, or both.
+
+* If you use `--find <keyword>` directly, the CLI will return all tasks containing that keyword in the title or description.
+
+**Example:**
+
+```bash
+tn search
+```
+
+```
+Enter the keyword you want to search for: meeting
+Where do you want to search? (Use arrow keys)
+1. title
+2. description
+3. both
+```
+
+```bash
+tn search --find "meeting"
+```
+
+┌─┬────┬────────────┬─────────────┬─────────┬────────────┬───────────────────┐
+│#│ ID │ Title      │ Status      │ Priority│ DueDate    │ Description       │
+├─┼────┼────────────┼─────────────┼─────────┼────────────┼───────────────────┤
+│1│ 3  │ Team meeting│ todo       │ medium  │ 2026-02-01 │ Discuss project   │
+└─┴────┴────────────┴─────────────┴─────────┴────────────┴───────────────────┘
+
+---
+
+### 7. Sort Tasks
+
+**Alias:** `so`
+**Description:** Sort tasks interactively by due date, priority, or status.
+
+```bash
+tn so
+```
+
+**Behavior:**
+
+* Prompts: `Sort tasks by:` → select from `dueDate`, `priority`, `status`.
+* Displays **sorted colored table**.
+* Can also pass `--by` option: `tn so --by priority`
 
 ---
 
@@ -230,20 +306,77 @@ tn ls
 tn up
 ```
 
-* Select task ID → confirm fields → update values
-* Shows updated table.
-
 **Deleting a Task:**
 
 ```bash
 tn del
 ```
 
-* Select task ID → confirm deletion → updated table shown
+**Undo Last Deleted Task:**
+
+```bash
+tn un
+```
+
+**Search Tasks:**
+
+```bash
+tn sr groceries
+```
+
+**Sort Tasks:**
+
+```bash
+tn so
+```
+
+* Select `dueDate`, `priority`, or `status` interactively
+* Or use `--by` option: `tn so --by priority`
 
 ---
 
 ## Notes
 
-* All selection prompts (`status`, `priority`, task selection) use arrow keys in terminal.
-* Task table always shows numbered index (`#`) starting from 1 for easy reference.
+* All selection prompts use **arrow keys** in terminal.
+* Task table always shows **numbered index (`#`) starting from 1**.
+* Status and priority are displayed in **colors** for better readability.
+
+---
+
+---
+
+## Screenshots / Demo
+
+**Adding a Task:**
+
+![Add Task](images/add.png "Adding a Task in TaskNinja CLI")
+
+**Listing Tasks:**
+
+![List Tasks](images/list.png "Listing Tasks in TaskNinja CLI")
+
+**Updating a Task:**
+
+![Update Task](images/update.png "Updating a Task")
+
+**Deleting a Task:**
+
+![Delete Task](images/delete.png "Deleting a Task")
+![Delete Task](images/delete2.png "Deleting a Task")
+
+**Restore Last-Deleted Task:**
+
+![Undo](images/undo.png "Restore Last-deleted task")
+
+**Search / Sort Tasks:**
+
+![Search Tasks](images/search.png "Searching Tasks")
+![Sort Tasks](images/sort.png "Sorting Tasks")
+![Sort Tasks-2](images/sort2.png "Sorting Tasks")
+
+**Mark as Done:**
+
+![Mark Task As Done](images/done.png "Mark as Done In one step")
+![Mark Task As Done](images/done2.png "Mark as Done In one step")
+
+---

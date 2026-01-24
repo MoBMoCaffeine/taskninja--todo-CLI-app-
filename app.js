@@ -48,7 +48,7 @@ const displayTasks = (tasks) => {
         chalk.cyanBright('DueDate'),
         chalk.cyanBright('Description')
     ],
-        colWidths: [4, 4, 15, 15, 10, 12, 40]
+        colWidths: [4, 4, 30, 12, 10, 12, 60]
     });
 
     tasks.forEach((task, index) => {
@@ -163,28 +163,60 @@ program
 
 
 
-// use caommand 'search' to find tasks by keyword in title or description
+// use command 'search' to find tasks by keyword in title or description
 program
-    .command('search <keyword>')
+    .command('search [keyword]')
     .alias('sr')
+    .option('-f, --find <keyword>', 'Keyword to search in title or description')
     .description('Search tasks by keyword in title or description')
-    .action( async (keyword) => {
-        if (!keyword) {
-            console.log(chalk.yellow('Please provide a keyword to search using --search option.'));
-            console.log(chalk.cyan('Example: tn search meeting'));
+    .action(async (keyword, options) => {
+        const tasks = await loadTasks();
+        let searchTerm = keyword || options.find;
+
+        if (!searchTerm) {
+            const answers = await inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'term',
+                    message: 'Enter the keyword you want to search for:',
+                    validate: input => input ? true : 'Keyword cannot be empty!'
+                },
+                {
+                    type: 'rawlist',
+                    name: 'field',
+                    message: 'Where do you want to search?',
+                    choices: ['title', 'description', 'both'],
+                    default: 'both'
+                }
+            ]);
+            searchTerm = answers.term;
+            const field = answers.field;
+
+            const founded = tasks.filter(task => {
+                if (field === 'title') return task.title.toLowerCase().includes(searchTerm.toLowerCase());
+                if (field === 'description') return task.description.toLowerCase().includes(searchTerm.toLowerCase());
+                return task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                       task.description.toLowerCase().includes(searchTerm.toLowerCase());
+            });
+
+            if (founded.length === 0) {
+                console.log(chalk.red('No task matched your search!'));
+                return;
+            }
+
+            displayTasks(founded);
             return;
         }
 
-        const tasks = await loadTasks();
+        const founded = tasks.filter(task =>
+            task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            task.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-        const founded = tasks.filter(task => {
-            task.title.toLowerCase().includes(keyword.toLowerCase()) || task.description.toLowerCase().includes(keyword.toLowerCase())
-        });
-
-        if (!founded.length) {
+        if (founded.length === 0) {
             console.log(chalk.red('No task matched your search!'));
             return;
-        } 
+        }
 
         displayTasks(founded);
     });
