@@ -353,34 +353,34 @@ tn so
 
 **Adding a Task:**
 
-![Add Task](images/add.png "Adding a Task in TaskNinja CLI")
+![Add Task](images/addNew.png.png "Adding a Task in TaskNinja CLI")
 
 **Listing Tasks:**
 
-![List Tasks](images/list.png "Listing Tasks in TaskNinja CLI")
+![List Tasks](images/listAll.png.png "Listing Tasks in TaskNinja CLI")
 
 **Updating a Task:**
 
-![Update Task](images/update.png "Updating a Task")
+![Update Task](images/updateWith.png "Updating a Task")
 
 **Deleting a Task:**
 
-![Delete Task](images/delete.png "Deleting a Task")
+![Delete Task](images/deleteMethod.png "Deleting a Task")
 
 **Restore Last-Deleted Task:**
 
-![Undo](images/undo.png "Restore Last-deleted task")
+![Undo](images/undoMethod.png "Restore Last-deleted task")
 
 **Search / Sort Tasks:**
 
-![Search Tasks](images/search.png "Searching Tasks")
-![Sort Tasks](images/sort.png "Sorting Tasks")
-![Sort Tasks-2](images/sort2.png "Sorting Tasks")
+![Search Tasks](images/searchWith.png "Searching Tasks")
+![Sort Tasks](images/sort_.png "Sorting Tasks")
+![Sort Tasks-2](images/sortBy.png "Sorting Tasks")
 
 **Mark as Done:**
 
-![Mark Task As Done](images/done1.png "Mark as Done In one step")
-![Mark Task As Done](images/done2.png "Mark as Done In one step")
+![Mark Task As Done](images/doneTask.png "Mark as Done In one step")
+![Mark Task As Done](images/doneTask2.png "Mark as Done In one step")
 
 **Tasks in `todos.json`:**
 
