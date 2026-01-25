@@ -353,11 +353,11 @@ tn so
 
 **Adding a Task:**
 
-![Add Task](images/addNew.png.png "Adding a Task in TaskNinja CLI")
+![Add Task](images/addNew.png "Adding a Task in TaskNinja CLI")
 
 **Listing Tasks:**
 
-![List Tasks](images/listAll.png.png "Listing Tasks in TaskNinja CLI")
+![List Tasks](images/listAll.png "Listing Tasks in TaskNinja CLI")
 
 **Updating a Task:**
 
