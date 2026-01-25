@@ -10,7 +10,7 @@
  * - fs: For file system operations
  * Author: Mohamed Bakr
  * Date: January 2024
- * Version: 1.1.1
+ * Version: 1.1.2
  */
 
 // for using commands in terminal
@@ -48,7 +48,7 @@ const displayTasks = (tasks) => {
         chalk.cyanBright('DueDate'),
         chalk.cyanBright('Description')
     ],
-        colWidths: [4, 4, 30, 12, 10, 12, 60]
+        colWidths: [4, 4, 30, 15, 10, 12, 60]
     });
 
     tasks.forEach((task, index) => {
@@ -196,7 +196,7 @@ program
                 if (field === 'title') return task.title.toLowerCase().includes(searchTerm.toLowerCase());
                 if (field === 'description') return task.description.toLowerCase().includes(searchTerm.toLowerCase());
                 return task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                       task.description.toLowerCase().includes(searchTerm.toLowerCase());
+                    task.description.toLowerCase().includes(searchTerm.toLowerCase());
             });
 
             if (founded.length === 0) {
@@ -246,7 +246,8 @@ program
             ]);
             criteria = answer.criteria;
         }
-
+        // normailze input `case-insensitive + separators`
+        criteria = criteria.toLowerCase().replace(/[-_]/g, '');
         
         if (!['dueDate', 'priority', 'status'].includes(criteria)) {
             console.log(chalk.red('Invalid sort criteria. Use --by with dueDate, priority, or status.'));
@@ -256,16 +257,16 @@ program
         const sortedTasks = [...tasks];
 
         switch (criteria) {
-            case 'dueDate' || 'duedate' || 'DueDate' || 'Duedate' || 'due date' || 'Due date' || 'due-date':
+            case 'duedate':
                 sortedTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
                 break;
-            case 'priority' || 'Priority':
+            case 'priority':
                 const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
                 sortedTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
                 break;
-            case 'status' || 'Status':
+            case 'status':
                 const statusOrder = { 'todo': 1, 'in-progress': 2, 'done': 3 };
-                sortedTasks.sort((a, b) => statusOrder[a.priority] - statusOrder[b.priority]);
+                sortedTasks.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
                 break;
             default:
                 console.log(chalk.red('Invalid sort criteria. Use dueDate, priority, or status.'));
@@ -380,10 +381,11 @@ program
             default: false
         },
         {
-            type: "rawlist",
+            type: "input",
             name: 'description',
             message: 'Enter the new description:',
-            when: answers => answers.changeDescription
+            when: answers => answers.changeDescription,
+            validate: input => input.trim() ? true : 'Description cannot be empty!'
         }
     ]);
 

@@ -347,6 +347,10 @@ tn so
 
 ## Screenshots / Demo
 
+**All Features:**
+
+![All Features](images/allFeatures.png "all commands")
+
 **Adding a Task:**
 
 ![Add Task](images/add.png "Adding a Task in TaskNinja CLI")
@@ -362,7 +366,6 @@ tn so
 **Deleting a Task:**
 
 ![Delete Task](images/delete.png "Deleting a Task")
-![Delete Task](images/delete2.png "Deleting a Task")
 
 **Restore Last-Deleted Task:**
 
@@ -376,7 +379,12 @@ tn so
 
 **Mark as Done:**
 
-![Mark Task As Done](images/done.png "Mark as Done In one step")
+![Mark Task As Done](images/done1.png "Mark as Done In one step")
 ![Mark Task As Done](images/done2.png "Mark as Done In one step")
+
+**Tasks in `todos.json`:**
+
+![todos.json](images/todo.json.png "shape of tasks")
+
 
 ---
