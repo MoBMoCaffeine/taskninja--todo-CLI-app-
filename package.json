@@ -1,18 +1,18 @@
 {
   "name": "taskninja",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "a simple CLI application with JS as a (To-Do Application)",
-  "main": "app.js",
+  "main": "./src/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "node app.js"
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
   },
   "bin": {
-    "dotask": "./app.js",
-    "taskninja": "./app.js",
-    "tn": "./app.js"
+    "dotask": "./src/index.js",
+    "taskninja": "./src/index.js",
+    "tn": "./src/index.js"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "node"
   ],
   "author": "Moahmed Bakr",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",
