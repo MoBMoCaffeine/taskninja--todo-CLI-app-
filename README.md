@@ -350,42 +350,42 @@ tn so
 
 **All Features:**
 
-![All Features](images/allFeatures.png "all commands")
+![All Features](src/images/allFeatures.png "all commands")
 
 **Adding a Task:**
 
-![Add Task](images/addNew.png "Adding a Task in TaskNinja CLI")
+![Add Task](src/images/addNew.png "Adding a Task in TaskNinja CLI")
 
 **Listing Tasks:**
 
-![List Tasks](images/listAll.png "Listing Tasks in TaskNinja CLI")
+![List Tasks](src/images/listAll.png "Listing Tasks in TaskNinja CLI")
 
 **Updating a Task:**
 
-![Update Task](images/updateWith.png "Updating a Task")
+![Update Task](src/images/updateWith.png "Updating a Task")
 
 **Deleting a Task:**
 
-![Delete Task](images/deleteMethod.png "Deleting a Task")
+![Delete Task](src/images/deleteMethod.png "Deleting a Task")
 
 **Restore Last-Deleted Task:**
 
-![Undo](images/undoMethod.png "Restore Last-deleted task")
+![Undo](src/images/undoMethod.png "Restore Last-deleted task")
 
 **Search / Sort Tasks:**
 
-![Search Tasks](images/searchWith.png "Searching Tasks")
-![Sort Tasks](images/sort_.png "Sorting Tasks")
-![Sort Tasks-2](images/sortBy.png "Sorting Tasks")
+![Search Tasks](src/images/searchWith.png "Searching Tasks")
+![Sort Tasks](src/images/sort_.png "Sorting Tasks")
+![Sort Tasks-2](src/images/sortBy.png "Sorting Tasks")
 
 **Mark as Done:**
 
-![Mark Task As Done](images/doneTask.png "Mark as Done In one step")
-![Mark Task As Done](images/doneTask2.png "Mark as Done In one step")
+![Mark Task As Done](src/images/doneTask.png "Mark as Done In one step")
+![Mark Task As Done](src/images/doneTask2.png "Mark as Done In one step")
 
 **Tasks in `todos.json`:**
 
-![todos.json](images/todo.json.png "shape of tasks")
+![todos.json](src/images/todo.json.png "shape of tasks")
 
 
 ---
