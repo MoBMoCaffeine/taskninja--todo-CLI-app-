@@ -9,18 +9,19 @@
  * - inquirer: For interactive prompts
  * - fs: For file system operations
  * Author: Mohamed Bakr
- * Date: January 2024
- * Version: 1.1.2
+ * Date: January 2026
+ * Version: 1.1.3
  */
 
 // for using commands in terminal
 import { Command } from "commander";
 // for interactive command line prompts
 import inquirer from "inquirer";
-// supporting colors in table forms
-import Table from 'cli-table3';
 // for colored text 
 import chalk from 'chalk';
+
+// helpers
+import {displayTasks, enableEscExit, cleanupAndExit} from './helpers/helpers.js';
 
 // assigning Commander to a variable
 const program = new Command();
@@ -28,52 +29,14 @@ const program = new Command();
 // importing validators and allowed values
 import { validateDueDate, ALLOWED_PRIORITIES, ALLOWED_STATUSES } from "./utils/validators.js";
 // importing task service functions
-import { loadTasks, saveTasks, getNextId, saveDeletedTask, loadDeletedTask, clearDeletedTask  } from "./utils/taskService.js";
+import { loadTasks, saveTasks, getNextId, saveDeletedTask, loadDeletedTask, clearDeletedTask, cleanupExpiredDeletedTasks } from "./utils/taskService.js";
 
 
-// helper function to display tasks in colored table
-const displayTasks = (tasks) => {
-    if (!tasks.length) {
-        console.log(chalk.yellow("No tasks to display."));
-        return;
-    }
-
-    const table = new Table({
-        head:  [
-        chalk.cyanBright('#'),
-        chalk.cyanBright('ID'),
-        chalk.cyanBright('Title'),
-        chalk.cyanBright('Status'),
-        chalk.cyanBright('Priority'),
-        chalk.cyanBright('DueDate'),
-        chalk.cyanBright('Description')
-    ],
-        colWidths: [4, 4, 30, 15, 10, 12, 60]
-    });
-
-    tasks.forEach((task, index) => {
-        table.push([
-            index + 1,
-            task.id,
-            task.title,
-            task.status === "done" ? chalk.green(task.status)
-            : task.status === "in-progress" ? chalk.yellow(task.status)
-            : chalk.blue(task.status),
-            task.priority === "high" ? chalk.red(task.priority)
-            : task.priority === "medium" ? chalk.yellow(task.priority)
-            : chalk.green(task.priority),
-            task.dueDate,
-            task.description || ''
-        ]);
-    });
-
-    console.log(table.toString());
-};
 // setting up
 program
     .name("taskninja")
     .description("A simple CLI application to manage your tasks")
-    .version("1.1.0");
+    .version("1.1.3");
 
 // use command 'add' with title + status + priority + dueDate + description and action
 program
@@ -81,6 +44,7 @@ program
     .alias('a')
     .description('Add a new task')
     .action(async () => {
+        enableEscExit();
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -153,12 +117,13 @@ program
         if (options.status) {
             if (!ALLOWED_STATUSES.includes(options.status)){
                 console.log(chalk.red(`Invalid status filter. Allowed statuses are: ${ALLOWED_STATUSES.join(", ")}`));
-                return;
+                cleanupAndExit(0);
             }
             tasks = tasks.filter(task => task.status === options.status);
         }
         // display all tasks in table format
         displayTasks(tasks);
+        cleanupAndExit(0);
     });
 
 
@@ -174,6 +139,7 @@ program
         let searchTerm = keyword || options.find;
 
         if (!searchTerm) {
+            enableEscExit();
             const answers = await inquirer.prompt([
                 {
                     type: 'input',
@@ -199,13 +165,13 @@ program
                     task.description.toLowerCase().includes(searchTerm.toLowerCase());
             });
 
-            if (founded.length === 0) {
+            if (!founded.length) {
                 console.log(chalk.red('No task matched your search!'));
-                return;
+                cleanupAndExit(0);
             }
 
             displayTasks(founded);
-            return;
+            cleanupAndExit(0);
         }
 
         const founded = tasks.filter(task =>
@@ -213,12 +179,13 @@ program
             task.description.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-        if (founded.length === 0) {
+        if (!founded.length) {
             console.log(chalk.red('No task matched your search!'));
-            return;
+            cleanupAndExit(0);
         }
 
         displayTasks(founded);
+        cleanupAndExit(0);
     });
 
 
@@ -236,6 +203,7 @@ program
         let criteria = options.by;
 
         if (!criteria) {
+            enableEscExit();
             const answer = await inquirer.prompt([
                 {
                     type: 'rawlist',
@@ -249,9 +217,9 @@ program
         // normailze input `case-insensitive + separators`
         criteria = criteria.toLowerCase().replace(/[-_]/g, '');
         
-        if (!['dueDate', 'priority', 'status'].includes(criteria)) {
+        if (!['duedate', 'priority', 'status'].includes(criteria)) {
             console.log(chalk.red('Invalid sort criteria. Use --by with dueDate, priority, or status.'));
-            return;
+            cleanupAndExit(0);
         }
         // sorting logic
         const sortedTasks = [...tasks];
@@ -270,10 +238,11 @@ program
                 break;
             default:
                 console.log(chalk.red('Invalid sort criteria. Use dueDate, priority, or status.'));
-                return;
+                cleanupAndExit(0);
         }
 
         displayTasks(sortedTasks);
+        cleanupAndExit(0);
     });
 
 
@@ -284,11 +253,11 @@ program
     .description('Update a task by ==> ID <==')
     .action(async () =>{
         const tasks = await loadTasks();
-        if (tasks.length === 0) {
+        if (!tasks.length) {
             console.log(chalk.red('No tasks found to update.'));
-            return;
+            cleanupAndExit(0);
         }
-
+        enableEscExit();
         const { id } = await inquirer.prompt([
             {
                 type: 'rawlist',
@@ -302,9 +271,10 @@ program
         const task = tasks.find(t => t.id === Number(id));
         if (!task) {
             console.log(chalk.red('Task not found!'));
-            return;
+            cleanupAndExit(0);
         }
 
+        enableEscExit();
         const answers = await inquirer.prompt([
       // for title
         {
@@ -415,6 +385,7 @@ program
         }
     
         displayTasks(tasks);
+        cleanupAndExit(0);
     });
 
 
@@ -424,17 +395,17 @@ program
     .description('Mark a task as done by ==> ID <==')
     .action(async () => {
         const tasks = await loadTasks();
-        if (tasks.length === 0) {
+        if (!tasks.length) {
             console.log(chalk.magenta('Congratulations! All tasks are already done.'));
-            return;
+            cleanupAndExit(0);
         }
 
         const activeTasks = tasks.filter(t => t.status !== 'done');
-        if (activeTasks.length === 0) {
+        if (!activeTasks.length) {
             console.log(chalk.magenta('Congratulations! All tasks are already done.'));
-            return;
+            cleanupAndExit(0);
         }
-
+        enableEscExit();
         const { id } = await inquirer.prompt([
             {
                 type: 'rawlist',
@@ -455,6 +426,7 @@ program
         console.log(chalk.green('Task marked as done successfully!'));
 
         displayTasks(tasks);
+        cleanupAndExit(0);
     });
 
 
@@ -466,11 +438,11 @@ program
     .description('delete a task by ==> ID <==')
     .action(async () => {
         const tasks = await loadTasks();
-        if (tasks.length === 0) {
+        if (!tasks.length) {
             console.log(chalk.yellow('No tasks found to delete.'));
-            return;
+            cleanupAndExit(0);
         }
-
+        enableEscExit();
         const { id } = await inquirer.prompt([
             {
                 type: 'rawlist',
@@ -479,7 +451,7 @@ program
                 choices: tasks.map(task => ({ name: `${task.id}: ${task.title}`, value: task.id }))
             }
         ]);
-
+        enableEscExit();
         const { confirm } = await inquirer.prompt([
             {
                 type: 'confirm',
@@ -490,7 +462,7 @@ program
         ]);
         if (!confirm) {
             console.log(chalk.yellow('Task deletion cancelled.'));
-            return;
+            cleanupAndExit(0);
         }
         const taskToDelete = tasks.find(t => t.id === Number(id));
         // save deleted task for undo functionality
@@ -503,6 +475,7 @@ program
         console.log(chalk.cyan('You can undo this action by using the `undo` command.'));
 
         displayTasks(newTasks);
+        cleanupAndExit(0);
     });
 
 // use command 'undo' to restore last deleted task
@@ -511,17 +484,21 @@ program
 .alias('un')
 .description('Undo the last deleted task')
 .action( async () => {
-    const lastDeletedTask =  await loadDeletedTask();
-    if (!lastDeletedTask) {
+    await cleanupExpiredDeletedTasks();
+
+    const deletedTasks = await loadDeletedTask();
+    if (!deletedTasks || !deletedTasks.length) {
         console.log(chalk.yellow('No deleted task to restore.'));
-        return;
+        cleanupAndExit(0);
     }
+
+    const lastDeletedTask =  deletedTasks.pop();
 
     const tasks = await loadTasks();
     tasks.push(lastDeletedTask);
     tasks.sort((a, b) => a.id - b.id); // keep tasks sorted by ID
     await saveTasks(tasks);
-    await clearDeletedTask();
+    // await clearDeletedTask();
 
     console.log(chalk.green(`Last deleted task restored successfully!, (Task name: ${lastDeletedTask.title})`));
 });

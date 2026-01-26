@@ -35,10 +35,6 @@ export const getNextId = (tasks) => {
  * @description this section responsible to store deleted tasks in deleted_todos.json
  * for undo functionality
  */
-// to save deleted last-deleted task
-export const saveDeletedTask = async (task) => {
-    await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(task, null, 2));
-}
 
 // to load deleted last-deleted task
 export const loadDeletedTask = async () => {
@@ -50,6 +46,30 @@ export const loadDeletedTask = async () => {
         throw error;
     }
 };
+// to save deleted last-deleted task
+export const saveDeletedTask = async (task, expiredAfter = 60000) => {
+    const deletedTask = await loadDeletedTask(task) || [];
+    const now = Date.now();
+
+    deletedTask.push({
+        ...task,
+        deletedAt: now, 
+        expiredAfter
+    });
+
+    await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(deletedTask, null, 2));
+}
+
+// function to delete all deleted-tasks after a while
+export const cleanupExpiredDeletedTasks = async () => {
+    const deletedTasks = await loadDeletedTask() || [];
+    const now = Date.now();
+
+    const remaining = deletedTasks.filter(task => now - task.deletedAt < task.expiredAfter);
+    if (remaining.length !== deletedTasks.length){
+        await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(remaining, null, 2));
+    }
+}
 
 // to clear deleted tasks file after undo
 export const clearDeletedTask = async () => {

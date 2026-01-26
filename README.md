@@ -20,6 +20,7 @@
   * [Sort Tasks](#sort-tasks)
 * [Task Fields & Allowed Values](#task-fields--allowed-values)
 * [Examples](#examples)
+* [Demo](#demo)
 
 ---
 
@@ -345,7 +346,7 @@ tn so
 
 ---
 
-## Screenshots / Demo
+## Demo
 
 **All Features:**
 
@@ -388,3 +389,19 @@ tn so
 
 
 ---
+
+## New Additions for Version `1.1.3`
+
+**ESC Button End Operation:**
+
+* If the user presses the `Esc` button, this will end the ongoing process
+* This may benefit the user by terminating the process without having to complete the process until the end
+
+### SOON
+**Auto Deleted Task:**
+
+* When you delete the task, it will remain saved in `deleted_todos.json` for one minute, after which it will be deleted automatically
+* This somewhat conserves the user's storage space while calculating that the user may undo deleting a task
+
+
+
