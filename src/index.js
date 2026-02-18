@@ -11,7 +11,7 @@
  * - fs: For file system operations
  * Author: Mohamed Bakr
  * Date: January 2026
- * Version: 1.1.4
+ * Version: 1.1.5
  * @license MIT
  * Copyright (c) 2026 Mohamed Bakr
  */
@@ -39,7 +39,7 @@ import { loadTasks, saveTasks, getNextId, saveDeletedTask, loadDeletedTask, clea
 program
     .name("taskninja")
     .description("A simple CLI application to manage your tasks")
-    .version("1.1.4");
+    .version("1.1.6");
 
 // use command 'add' with title + status + priority + dueDate + description and action
 program
@@ -73,6 +73,17 @@ program
                 type: 'input',
                 name: 'dueDate',
                 message : 'Due Date (YYYY-MM-DD):',
+                default : () => {
+                    const today = new Date();
+                    return today.toISOString().split('T')[0];
+                },
+                filter: (input) => {
+                    const trimmed = input.trim();
+                    if (!trimmed) {
+                        return new Date().toISOString().split('T')[0];
+                    }
+                    return trimmed;
+                },
                 validate : input => {
                     try {
                         validateDueDate(input);

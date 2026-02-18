@@ -390,12 +390,13 @@ tn so
 
 ---
 
-## New Additions for Version `1.1.3`
+## New Additions for Version `1.1.6`
 
 **ESC Button End Operation:**
 
 * If the user presses the `Esc` button, this will end the ongoing process
 * This may benefit the user by terminating the process without having to complete the process until the end
+* default setter for date
 
 ### SOON
 **Auto Deleted Task:**
