@@ -24,7 +24,17 @@ export const loadTasks = async () => {
 };
 // function to save tasks to file
 export const saveTasks = async (tasks) => {
-    await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
+    
+    if (tasks.length === 0) {
+        try {
+            await fs.unlink(TASKS_FILE);
+        } catch (error) {
+            if (error.code !== 'ENOENT') throw error;
+        }
+    }
+    else {
+        await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
+    }
 };
 // get next task ID
 export const getNextId = (tasks) => {
@@ -37,18 +47,31 @@ export const getNextId = (tasks) => {
  */
 
 // to load deleted last-deleted task
-export const loadDeletedTask = async () => {
+export const loadDeletedTasks = async () => {
     try {
         const data = await fs.readFile(DELETED_TASKS_FILE, 'utf8');
         return JSON.parse(data);
     } catch (error) {
-        if (error.code === 'ENOENT') return null;
+        if (error.code === 'ENOENT') return [];
         throw error;
     }
 };
 // to save deleted last-deleted task
+
+export const saveDeletedTasksFile = async(deletedTasks) => {
+    if (deletedTasks.length === 0) {
+        try {
+            await fs.unlink(DELETED_TASKS_FILE);
+        } catch (error) {
+            if (error.code !== 'ENOENT') throw error;
+        }
+    }
+    else {
+        await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(deletedTasks, null, 2));
+    }
+};
 export const saveDeletedTask = async (task, expiredAfter = 60000) => {
-    const deletedTask = await loadDeletedTask(task) || [];
+    const deletedTask = await loadDeletedTasks();
     const now = Date.now();
 
     deletedTask.push({
@@ -57,17 +80,19 @@ export const saveDeletedTask = async (task, expiredAfter = 60000) => {
         expiredAfter
     });
 
-    await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(deletedTask, null, 2));
+    await saveDeletedTasksFile(deletedTask);
 }
 
 // function to delete all deleted-tasks after a while
 export const cleanupExpiredDeletedTasks = async () => {
-    const deletedTasks = await loadDeletedTask() || [];
+    const deletedTasks = await loadDeletedTasks();
+    if (deletedTasks.length === 0) return;
+
     const now = Date.now();
 
     const remaining = deletedTasks.filter(task => now - task.deletedAt < task.expiredAfter);
     if (remaining.length !== deletedTasks.length){
-        await fs.writeFile(DELETED_TASKS_FILE, JSON.stringify(remaining, null, 2));
+        await saveDeletedTasksFile(remaining);
     }
 }
 

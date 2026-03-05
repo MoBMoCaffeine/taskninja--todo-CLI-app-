@@ -3,8 +3,6 @@
 import Table from 'cli-table3';
 // for colored text 
 import chalk from 'chalk';
-// for reading keyboard buttons
-import readline from 'readline';
 
 // helper function to display tasks in colored table
 const displayTasks = (tasks) => {
@@ -52,19 +50,4 @@ const cleanupAndExit = (code = 0) => {
     process.exit(code);
 };
 
-const enableEscExit = () => {
-    readline.emitKeypressEvents(process.stdin);
-
-    if (process.stdin.isTTY) {
-        process.stdin.setRawMode(true);
-    }
-
-    process.stdin.on('keypress', (_, key) => {
-        if (key?.name === 'escape'){
-            console.log(chalk.yellow('\nOperation Cancelled!'));
-            cleanupAndExit(0);
-        }
-    });
-};
-
-export {displayTasks, enableEscExit, cleanupAndExit};
+export {displayTasks, cleanupAndExit};
