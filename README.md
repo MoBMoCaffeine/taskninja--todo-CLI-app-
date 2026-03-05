@@ -214,8 +214,8 @@ tn so --by priority
 | Field | Allowed Values / Description | Requirement |
 | --- | --- | --- |
 | **Title** | Any non-empty string | Required |
-| **Status** | `todo` | `in-progress` | `done` | Required |
-| **Priority** | `low` | `medium` | `high` | Required |
+| **Status** | `todo`, `in-progress`, `done` | Required |
+| **Priority** | `low`, `medium`, `high` | Required |
 | **Due Date** | Date in `YYYY-MM-DD` format | Required |
 | **Description** | Any text providing task details | Optional |
 
