@@ -1,8 +1,8 @@
 {
   "name": "taskninja",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "a simple CLI application with JS as a (To-Do Application)",
-  "main": "./src/index.js",
+  "main": "./index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,7 +12,7 @@
   "bin": {
     "dotask": "./index.js",
     "taskninja": "./index.js",
-    "tn": "./src/index.js"
+    "tn": "./index.js"
   },
   "repository": {
     "type": "git",

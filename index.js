@@ -11,7 +11,7 @@
  * - fs: For file system operations
  * Author: Mohamed Bakr
  * Date: January 2026
- * Version: 1.1.5
+ * Version: 1.1.8
  * @license MIT
  * Copyright (c) 2026 Mohamed Bakr
  * @MoBMoCaffeine
@@ -35,7 +35,7 @@ const program = new Command();
 program
     .name("taskninja")
     .description("A simple CLI application to manage your tasks")
-    .version("1.1.7");
+    .version("1.1.8");
 
 // use command 'add' with title + status + priority + dueDate + description and action
 program
