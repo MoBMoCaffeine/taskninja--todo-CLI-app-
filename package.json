@@ -10,8 +10,8 @@
     "dev": "node src/index.js"
   },
   "bin": {
-    "dotask": "./src/index.js",
-    "taskninja": "./src/index.js",
+    "dotask": "./index.js",
+    "taskninja": "./index.js",
     "tn": "./src/index.js"
   },
   "repository": {
